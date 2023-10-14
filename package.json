@@ -1,0 +1,27 @@
+{
+  "name": "js-proxy-server-with-caching",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dinesh36/js-proxy-server-with-caching.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dinesh36/js-proxy-server-with-caching/issues"
+  },
+  "homepage": "https://github.com/dinesh36/js-proxy-server-with-caching#readme",
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "http-proxy-middleware": "^2.0.6",
+    "morgan": "^1.10.0",
+    "nodemon": "^3.0.1"
+  }
+}
