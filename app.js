@@ -1,5 +1,7 @@
 const express = require('express');
 const {createProxyMiddleware, responseInterceptor} = require('http-proxy-middleware');
+const AUTH_CHECK_API = '/api/user';
+const AUTH_CHECK_INTERVAL = 1000 * 30 // 1000 * 30 // Thirty Seconds
 
 const CacheManager = require("./cache-manager");
 require('dotenv').config();
@@ -10,35 +12,37 @@ class JsProxyWithCaching {
         this.port = 3000;
         this.host = "localhost";
         this.proxyTarget = process.env.proxyTarget;
-        this.cacheManager = new CacheManager();
+        this.cacheManager = new CacheManager(this.proxyTarget);
     }
 
     proxyMethod() {
-        return createProxyMiddleware(
-            this.cacheManager.isPathNotCached.bind(this.cacheManager),
-            {
-                target: this.proxyTarget,
-                changeOrigin: true,
-                selfHandleResponse: true,
-                onProxyRes: responseInterceptor(this.onProxyRes.bind(this)),
-            });
-    }
-
-    init() {
-        this.app.use('/', this.proxyMethod.bind(this)());
-        this.app.listen(this.port, this.host, () => {
-            console.log(`Starting Proxy at ${this.host}:${this.port}`);
+        return createProxyMiddleware({
+            target: this.proxyTarget,
+            changeOrigin: true,
+            selfHandleResponse: true,
+            onProxyRes: responseInterceptor(this.onProxyRes.bind(this)),
         });
     }
 
-    async onProxyRes(responseBuffer, proxyRes, req, res) {
-        console.log('inside ==> ',req.url);
-        if (req.url === '/portfolio/supermarket-web-app') {
-            const response = responseBuffer.toString('utf8'); // convert buffer to string
-            return response.replace('Hello', 'Hi'); // manipulate response and return the result
+    init() {
+        this.app.use(this.proxyMethod.bind(this)());
+        this.app.listen(this.port, this.host, () => {
+            console.log(`Starting Proxy at ${this.host}:${this.port}`);
+        });
+        this.setAuthWithInterval();
+    }
+
+    setAuthWithInterval(){
+        setInterval(async ()=>{
+            await this.cacheManager.callCachedRequest(AUTH_CHECK_API);
+        }, AUTH_CHECK_INTERVAL);
+    }
+
+    async onProxyRes(responseBuffer, proxyRes, req) {
+        if (req.url === AUTH_CHECK_API) {
+            this.cacheManager.cacheRequest(req);
         }
         return responseBuffer;
-        // return this.cacheManager.getCachedPathResponse(proxyRes, req, res);
     }
 }
 
