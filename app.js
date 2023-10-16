@@ -1,9 +1,10 @@
 const express = require('express');
 const {createProxyMiddleware, responseInterceptor} = require('http-proxy-middleware');
 const AUTH_CHECK_API = '/api/user';
-const AUTH_CHECK_INTERVAL = 1000 * 30 // 1000 * 30 // Thirty Seconds
+const AUTH_CHECK_INTERVAL = 1000 * 60 // 1000 * 60 // One Minute
 
 const CacheManager = require("./cache-manager");
+const ResponseModifier = require("./response-modifier");
 require('dotenv').config();
 
 class JsProxyWithCaching {
@@ -13,6 +14,7 @@ class JsProxyWithCaching {
         this.host = "localhost";
         this.proxyTarget = process.env.proxyTarget;
         this.cacheManager = new CacheManager(this.proxyTarget);
+        this.responseModifier = new ResponseModifier();
     }
 
     proxyMethod() {
@@ -21,6 +23,7 @@ class JsProxyWithCaching {
             changeOrigin: true,
             selfHandleResponse: true,
             onProxyRes: responseInterceptor(this.onProxyRes.bind(this)),
+            onProxyReq: this.responseModifier.replaceApiResponse.bind(this.responseModifier)
         });
     }
 
@@ -38,11 +41,12 @@ class JsProxyWithCaching {
         }, AUTH_CHECK_INTERVAL);
     }
 
-    async onProxyRes(responseBuffer, proxyRes, req) {
+    async onProxyRes(responseBuffer, proxyRes, req, res) {
         if (req.url === AUTH_CHECK_API) {
-            this.cacheManager.cacheRequest(req);
+            this.cacheManager.cacheRequest(req, res);
         }
-        return responseBuffer;
+        // const modifiedResponse = this.responseModifier.modifyAssetResponse(responseBuffer, proxyRes);
+        return this.responseModifier.modifyApiResponse(responseBuffer, proxyRes, res);
     }
 }
 
