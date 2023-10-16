@@ -13,16 +13,17 @@ class ResponseModifier{
         if(modifiedResponse[url]){
             console.log('updating the response ==> ', url);
             return JSON.stringify(modifiedResponse[url](originalResponse));
+        } else if(replacedResponses[url]){
+            console.log('replacing the response ==> ', url);
+            return this.replaceApiResponse(res, url)
+        } else {
+            return responseBuffer;
         }
-        return responseBuffer;
     }
 
-    replaceApiResponse(proxyReq, req, res){
-        const url = req.url;
-        if(replacedResponses[url]){
-            console.log('replacing the response ==> ', url);
-            res.end(JSON.stringify(replacedResponses[url]));
-        }
+    replaceApiResponse(res,url){
+        res.statusCode = 200;
+        return JSON.stringify(replacedResponses[url]);
     }
 }
 

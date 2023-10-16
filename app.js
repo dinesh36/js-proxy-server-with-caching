@@ -22,8 +22,7 @@ class JsProxyWithCaching {
             target: this.proxyTarget,
             changeOrigin: true,
             selfHandleResponse: true,
-            onProxyRes: responseInterceptor(this.onProxyRes.bind(this)),
-            onProxyReq: this.responseModifier.replaceApiResponse.bind(this.responseModifier)
+            onProxyRes: responseInterceptor(this.onProxyRes.bind(this))
         });
     }
 
