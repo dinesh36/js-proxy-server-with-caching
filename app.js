@@ -13,13 +13,14 @@ class JsProxyWithCaching {
         this.port = 3000;
         this.host = "localhost";
         this.proxyTarget = process.env.proxyTarget;
+        this.APIProxyTarget = process.env.APIProxyTarget;
         this.cacheManager = new CacheManager(this.proxyTarget);
         this.responseModifier = new ResponseModifier();
     }
 
-    proxyMethod() {
-        return createProxyMiddleware({
-            target: this.proxyTarget,
+    proxyMethod({target, path}) {
+        return createProxyMiddleware(path,{
+            target,
             changeOrigin: true,
             selfHandleResponse: true,
             onProxyRes: responseInterceptor(this.onProxyRes.bind(this))
@@ -27,7 +28,12 @@ class JsProxyWithCaching {
     }
 
     init() {
-        this.app.use(this.proxyMethod.bind(this)());
+        const apiPath ='/api/*';
+        this.app.use(apiPath, this.proxyMethod.bind(this)({target: this.APIProxyTarget, path:apiPath}));
+
+        const proxyPath ='/*';
+        this.app.use(proxyPath, this.proxyMethod.bind(this)({target: this.proxyTarget, path:proxyPath}));
+
         this.app.listen(this.port, this.host, () => {
             console.log(`Starting Proxy at ${this.host}:${this.port}`);
         });
