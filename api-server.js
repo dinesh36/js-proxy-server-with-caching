@@ -6,5 +6,5 @@ app.use((req, res)=>{
     res.send('API server...');
 });
 app.listen(API_PORT, 'localhost', () => {
-    console.log(`Starting Proxy at ${this.host}:${this.port}`);
+    console.log(`Starting API server at localhost:${API_PORT}`);
 });

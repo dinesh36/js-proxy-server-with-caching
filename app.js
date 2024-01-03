@@ -10,7 +10,7 @@ require('dotenv').config();
 class JsProxyWithCaching {
     constructor() {
         this.app = express();
-        this.port = 3000;
+        this.port = 3005;
         this.host = "localhost";
         this.proxyTarget = process.env.proxyTarget;
         this.APIProxyTarget = process.env.APIProxyTarget;
@@ -19,7 +19,7 @@ class JsProxyWithCaching {
     }
 
     proxyMethod({target, path}) {
-        return createProxyMiddleware(path,{
+        return createProxyMiddleware(path, {
             target,
             changeOrigin: true,
             selfHandleResponse: true,
@@ -28,12 +28,8 @@ class JsProxyWithCaching {
     }
 
     init() {
-        const apiPath ='/api/*';
-        this.app.use(apiPath, this.proxyMethod.bind(this)({target: this.APIProxyTarget, path:apiPath}));
-
-        const proxyPath ='/*';
-        this.app.use(proxyPath, this.proxyMethod.bind(this)({target: this.proxyTarget, path:proxyPath}));
-
+        this.app.use('/api/*', this.proxyMethod.bind(this)({target: this.APIProxyTarget, path: '/api/*'}));
+        this.app.use('/*', this.proxyMethod.bind(this)({target: this.proxyTarget, path: '/'}));
         this.app.listen(this.port, this.host, () => {
             console.log(`Starting Proxy at ${this.host}:${this.port}`);
         });
